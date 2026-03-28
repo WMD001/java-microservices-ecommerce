@@ -1,0 +1,87 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  # Tomcat 连接池配置（针对8核CPU服务器的建议值）
+  tomcat:
+    # 最大线程数：建议公式 = (CPU核心数 * 2) + 等待I/O的线程数
+    # 对于I/O密集型应用（如电商），可适当提高
+    max-threads: 200
+    # 最小工作线程数
+    min-spare-threads: 20
+    # 最大连接数
+    max-connections: 10000
+    # 连接超时时间（毫秒）
+    connection-timeout: 30000
+    # 请求队列容量（当所有线程忙时，新请求进入队列）
+    accept-count: 100
+    # 是否启用keep-alive
+    keep-alive:
+      enabled: true
+      timeout: 30000
+      max-requests: 100
+
+spring:
+  application:
+    name: week1-day2-thread-pool-demo
+
+  # 虚拟线程配置（Spring Boot 3.5+ 支持） 需要 java 21
+  threads:
+    virtual:
+      enabled: true  # 启用虚拟线程
+
+  # 异步配置
+  task:
+    execution:
+      # 默认异步任务执行器（用于@Async无指定bean）
+      default:
+        core-size: 8      # 核心线程数 = CPU核心数
+        max-size: 20      # 最大线程数
+        queue-capacity: 50
+        thread-name-prefix: default-async-
+        keep-alive-seconds: 60
+
+      # 文件批量解析任务专用线程池
+      file-parsing:
+        core-size: 4
+        max-size: 10
+        queue-capacity: 100  # 文件解析可能较慢，队列容量稍大
+        thread-name-prefix: file-parsing-
+        keep-alive-seconds: 120
+
+      # 文件字数分析任务专用线程池
+      word-count:
+        core-size: 2
+        max-size: 6
+        queue-capacity: 50
+        thread-name-prefix: word-count-
+        keep-alive-seconds: 60
+
+# Actuator端点暴露（用于监控线程池状态）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,threaddump
+  endpoint:
+    health:
+      show-details: always
+
+# OpenAPI配置
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+
+# 日志配置
+logging:
+  level:
+    com.example.microservices.week1.day2: DEBUG
+    org.springframework.scheduling: INFO
+    org.apache.tomcat: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
