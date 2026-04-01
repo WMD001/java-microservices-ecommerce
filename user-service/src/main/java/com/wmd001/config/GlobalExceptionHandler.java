@@ -1,5 +1,7 @@
 package com.wmd001.config;
 
+import com.wmd001.common.ApiResult;
+import com.wmd001.response.UserServiceResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -16,20 +18,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = {MethodArgumentNotValidException.class})
     public ResponseEntity<?> methodArgumentNotValid(MethodArgumentNotValidException e) {
-        log.error("handler MethodArgumentNotValidException", e);
-        List<Map<String, String>> errors = e.getBindingResult().getAllErrors().stream().map((error) -> {
-            if (error instanceof FieldError fieldError) {
-                return Map.of("field", fieldError.getField(), "message", fieldError.getDefaultMessage());
-            } else {
-                return Map.of("error", error.getDefaultMessage());
-            }
-        }).toList();
+        log.error("handler MethodArgumentNotValidException:", e);
+        List<ApiResult.ValidationError> errors = e.getFieldErrors().stream()
+                .map(error -> new ApiResult.ValidationError(
+                        error.getField(),
+                        error.getDefaultMessage(),
+                        error.getRejectedValue()
+                ))
+                .toList();
+        UserServiceResponse.ValidationFailed validationFailed = new UserServiceResponse.ValidationFailed(errors);
         return ResponseEntity
                 .badRequest()
-                .body(Map.of(
-                        "status", 400,
-                        "message", "Bad Request",
-                        "errors", errors));
+                .body(validationFailed);
     }
 
 }
