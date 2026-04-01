@@ -1,5 +1,6 @@
 package com.wmd001.service;
 
+import com.wmd001.domain.entity.UserCreationRequest;
 import com.wmd001.domain.entity.UserEntity;
 import com.wmd001.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,4 @@ public class UserService {
         };
     }
 
-    // 内部Record：用户创建请求
-    public record UserCreationRequest(String username, String email, String password) {}
 }

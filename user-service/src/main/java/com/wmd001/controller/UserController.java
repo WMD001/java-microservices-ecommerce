@@ -1,9 +1,11 @@
 package com.wmd001.controller;
 
+import com.wmd001.domain.entity.UserCreationRequest;
 import com.wmd001.domain.entity.UserEntity;
 import com.wmd001.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
@@ -30,7 +32,12 @@ public class UserController {
     @PostMapping
     @Operation(
             summary = "创建用户",
-            description = "创建新用户账户，返回用户ID和基本信息"
+            description = "创建新用户账户，支持输入验证。用户名需唯一，邮箱需有效格式。",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "用户创建成功"),
+                    @ApiResponse(responseCode = "400", description = "请求参数验证失败"),
+                    @ApiResponse(responseCode = "409", description = "用户名或邮箱已存在")
+            }
     )
     public ResponseEntity<UserResponse> createUser(
             @Parameter(description = "用户创建请求", required = true)
@@ -91,11 +98,5 @@ public class UserController {
         return ResponseEntity.ok(Map.of("summary", summary));
     }
 
-    // DTO定义（与UserService内部Record保持一致）
-    public record UserCreationRequest(
-            @NotBlank(message = "用户名不能为空") @Size(min = 3, max = 20, message = "用户名长度需在3-20字符之间") String username,
-            @NotBlank(message = "邮箱不能为空") @Email(message = "邮箱格式不正确") String email,
-            @NotBlank(message = "密码不能为空") @Size(min = 6, max = 30, message = "密码长度需在6-30字符之间") String password
-    ) {}
     public record UserResponse(Long id, String username, String email, Boolean isActive) {}
 }
